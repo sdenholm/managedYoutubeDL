@@ -419,7 +419,7 @@ class Manager:
       try:
         #logger.info(urlList)
         info = ydl.extract_info(urlList[0], download=False)
-        logger.info("File size test result: {}".format(list(info.keys())))
+        logger.info("File size test result: {}".format(list(info["requested_formats"][0].keys())))
         
         # requested_formats
         #   -filesize, height, width
@@ -427,6 +427,7 @@ class Manager:
         videoInfo = info["requested_formats"][0]
         audioInfo = info["requested_formats"][1]
         
+        # filesize_approx?
         logger.info(videoInfo["filesize"]/(1024*1024))
       except Exception as err:
         logger.info("File size test failed: {}".format(err))
