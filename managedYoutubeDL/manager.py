@@ -419,7 +419,7 @@ class Manager:
       try:
         #logger.info(urlList)
         info = ydl.extract_info(urlList[0], download=False)
-        #logger.info("File size test result: {}".format(info))
+        logger.info("File size test result: {}".format(info))
         
         # requested_formats
         #   -filesize, height, width
