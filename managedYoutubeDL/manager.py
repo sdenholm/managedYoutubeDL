@@ -427,8 +427,9 @@ class Manager:
         videoInfo = info["requested_formats"][0]
         audioInfo = info["requested_formats"][1]
         
-        # filesize_approx?
-        logger.info(videoInfo["filesize"]/(1024*1024))
+        #
+        logger.info(info["filesize_approx"] / (1024 * 1024))
+        ##logger.info(videoInfo["filesize"]/(1024*1024))
       except Exception as err:
         logger.info("File size test failed: {}".format(err))
 
