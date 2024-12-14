@@ -40,12 +40,7 @@ logging.getLogger("").addHandler(fileHandler)
 from managedYoutubeDL.manager import Manager
 from managedYoutubeDL import YAMLBuilder
 
-SUPPORTED_QUALITIES = {
-  "max":   "bestvideo+bestaudio",
-  "480p":  "bestvideo[height<=480]+bestaudio",
-  "720p":  "bestvideo[height<=720]+bestaudio",
-  "1080p": "bestvideo[height<=1080]+bestaudio",
-}
+
 
 
 def initialise(**kwargs):
@@ -65,8 +60,11 @@ def downloadNew(**kwargs):
   # create the manager from the configuration file
   manager = YAMLBuilder.loadManager(configFileLocation)
   
+  # video quality
+  quality = Manager.VideoQuality(kwargs.get("quality"))
+  
   # download new videos
-  numDownloaded, numFailed = manager.downloadNewVideos()
+  numDownloaded, numFailed = manager.downloadNewVideos(quality=quality)
   logger.info("{} videos downloaded. {} failed.".format(numDownloaded, numFailed))
   
   # safe dump the manager
@@ -113,11 +111,11 @@ def manualDownload(**kwargs):
   urlList = kwargs.get("urlList")
   
   # video quality
-  quality = kwargs.get("quality")
+  quality = Manager.VideoQuality(kwargs.get("quality"))
   
   # CHECK: quality is supported
-  if quality not in SUPPORTED_QUALITIES:
-    raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {SUPPORTED_QUALITIES}")
+  if quality not in Manager.SUPPORTED_QUALITIES:
+    raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {Manager.SUPPORTED_QUALITIES}")
   
   options = {
     'quiet':                True,
@@ -127,10 +125,8 @@ def manualDownload(**kwargs):
     'merge_output_format': 'mkv',
     
     #'format': 'bestvideo[ext=mp4]+bestaudio[ext=webm]',
-    'format': SUPPORTED_QUALITIES.get(quality, None),
+    'format': Manager.SUPPORTED_QUALITIES.get(quality, None),
   }
-  
-  ## "bestvideo[height<=720][ext=mp4][vcodec^=avc]+bestaudio[ext=m4a]/best[ext=mp4]/best"
   
   import yt_dlp
   with yt_dlp.YoutubeDL(options) as ydl:

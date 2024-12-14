@@ -6,6 +6,7 @@ import os
 import re
 import sys
 import time
+from enum import Enum
 import multiprocessing
 from datetime import timedelta
 
@@ -17,6 +18,13 @@ import yt_dlp
 
 class Manager:
   
+  class VideoQuality(Enum):
+    QUALITY_MAX   = "max"
+    QUALITY_480P  = "480p"
+    QUALITY_720P  = "720p"
+    QUALITY_1080P = "1080p"
+    
+  
   # max time (seconds) to allow for video to download
   DOWNLOAD_TIMEOUT = 60*3
   
@@ -25,6 +33,14 @@ class Manager:
   
   # time (seconds) to wait between consecutive downloads
   WAIT_BETWEEN_DOWNLOADS = 10
+  
+  # video formats we support
+  SUPPORTED_QUALITIES = {
+    VideoQuality.QUALITY_MAX:   "bestvideo+bestaudio",
+    VideoQuality.QUALITY_480P:  "bestvideo[height<=480]+bestaudio",
+    VideoQuality.QUALITY_720P:  "bestvideo[height<=720]+bestaudio",
+    VideoQuality.QUALITY_1080P: "bestvideo[height<=1080]+bestaudio",
+  }
   
   def setClientSecretsFile(self, value):
     self.clientSecretsFile = value
@@ -276,7 +292,7 @@ class Manager:
   
     
   
-  def _downloadVideo(self, channel: Channel, video: Video, timeout: timedelta=None) -> bool:
+  def _downloadVideo(self, channel: Channel, video: Video, quality=None, timeout: timedelta=None) -> bool:
     """
     # Download the <channel>'s <video> and report on whether it was a success
     #
@@ -305,6 +321,9 @@ class Manager:
     # throw timeout error
     #  -have timeout argument=None
     
+    if quality is None:
+      quality = Manager.VideoQuality.QUALITY_MAX
+    
     # OS-friendly channel name
     channelName = "".join([s for s in channel.title if s.isalpha() or s.isdigit()])
   
@@ -318,13 +337,14 @@ class Manager:
       "ignoreerrors": True,
       "outtmpl":      videoLoc
     }
-  
+    
     # if ffmpeg is defined we can download the highest quality video and audio
     # and combine them together
     # --format bestvideo[ext=mp4]+bestaudio[ext=webm] --merge_output_format mkv
     if self.ffmpegLocation is not None:
-      options["ffmpeg_location"] = self.ffmpegLocation
-      options["format"] = "bestvideo[ext=mp4]+bestaudio[ext=webm]"
+      options["ffmpeg_location"]     = self.ffmpegLocation
+      #options["format"]              = "bestvideo[ext=mp4]+bestaudio[ext=webm]"
+      options["format"]              = Manager.SUPPORTED_QUALITIES.get(quality, None),
       options["merge_output_format"] = "mkv"
   
     # otherwise, use highest quality, mixed audio/video file
@@ -465,7 +485,7 @@ class Manager:
     return video.id in self.seenChannelVideos.get(channel.id, [])
   
   
-  def downloadNewVideos(self):
+  def downloadNewVideos(self, quality:VideoQuality):
     """
     # Iterate over our list of subscribed channels, fetching new
     # videos, filtering them by channel-specific and global filters, then
@@ -479,6 +499,11 @@ class Manager:
       "Failed":     0
     }
     
+    # CHECK: quality is supported
+    if quality not in Manager.SUPPORTED_QUALITIES:
+      raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {list(Manager.SUPPORTED_QUALITIES.keys())}")
+    
+    return
     # separate to-ignore and to-download channels
     ignoreChannelList, channelList = self._isolateIgnoreChannels()
     logger.debug("downloadNewVideos: Ignoring {} channel(s)".format(len(ignoreChannelList)))
