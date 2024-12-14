@@ -42,6 +42,7 @@ from managedYoutubeDL import YAMLBuilder
 
 SUPPORTED_QUALITIES = {
   "max":   "bestvideo+bestaudio",
+  "480p":  "bestvideo[height<=480]+bestaudio",
   "720p":  "bestvideo[height<=720]+bestaudio",
   "1080p": "bestvideo[height<=1080]+bestaudio",
 }
