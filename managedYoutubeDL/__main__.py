@@ -61,7 +61,14 @@ def downloadNew(**kwargs):
   manager = YAMLBuilder.loadManager(configFileLocation)
   
   # video quality
-  quality = Manager.VideoQuality(kwargs.get("quality"))
+  quality = None
+  qual_str = kwargs.get("quality")
+  try:
+    quality = Manager.VideoQuality(qual_str)
+  except ValueError: pass
+  if quality is None:
+    raise ValueError(
+      f"Unknown video quality {qual_str}. Supported qualitities: {[x.value for x in Manager.VideoQuality]}")
   
   # download new videos
   numDownloaded, numFailed = manager.downloadNewVideos(quality=quality)
@@ -111,13 +118,13 @@ def manualDownload(**kwargs):
   urlList = kwargs.get("urlList")
   
   # video quality
-  quality_str = kwargs.get("quality")
-  quality     = None
+  quality  = None
+  qual_str = kwargs.get("quality")
   try:
-    quality = Manager.VideoQuality(quality_str)
+    quality = Manager.VideoQuality(qual_str)
   except ValueError: pass
   if quality is None:
-    raise ValueError(f"Unknown video quality {quality_str}. Supported qualitities: {[x.value for x in Manager.VideoQuality]}")
+    raise ValueError(f"Unknown video quality {qual_str}. Supported qualitities: {[x.value for x in Manager.VideoQuality]}")
   
   options = {
     'quiet':                True,
