@@ -111,11 +111,11 @@ def manualDownload(**kwargs):
   urlList = kwargs.get("urlList")
   
   # video quality
-  quality = Manager.VideoQuality(kwargs.get("quality"))
-  print("wual", quality)
-  # CHECK: quality is supported
-  if quality not in Manager.SUPPORTED_QUALITIES:
-    raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {Manager.SUPPORTED_QUALITIES}")
+  try:
+    quality_str = kwargs.get("quality")
+    quality     = Manager.VideoQuality(quality_str)
+  except ValueError:
+    raise ValueError(f"Unknown video quality {quality_str}. Supported qualitities: {list(Manager.SUPPORTED_QUALITIES.keys())}")
   
   options = {
     'quiet':                True,
