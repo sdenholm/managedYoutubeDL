@@ -503,7 +503,7 @@ class Manager:
     if quality not in Manager.SUPPORTED_QUALITIES:
       raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {list(Manager.SUPPORTED_QUALITIES.keys())}")
     
-    return
+    
     # separate to-ignore and to-download channels
     ignoreChannelList, channelList = self._isolateIgnoreChannels()
     logger.debug("downloadNewVideos: Ignoring {} channel(s)".format(len(ignoreChannelList)))
@@ -560,7 +560,7 @@ class Manager:
           try:
             
             # if it downloaded successfully
-            if self._downloadVideo(channel, video, timeout=self.downloadTimeout):
+            if self._downloadVideo(channel, video, quality=quality, timeout=self.downloadTimeout):
               downloadResults["Downloaded"] += 1
               logger.debug("downloadNewVideos: Downloaded successfully")
             
