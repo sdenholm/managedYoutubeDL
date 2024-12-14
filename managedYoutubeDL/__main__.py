@@ -168,7 +168,7 @@ if __name__ == "__main__":
   sp.set_defaults(func=downloadNew)
   
   # optional arguments
-  parser.add_argument("--quality", type=str, help="quality level of videos", default="max")
+  sp.add_argument("--quality", type=str, help="quality level of videos", default="max")
   
   ##############################
   # initialise
@@ -204,7 +204,7 @@ if __name__ == "__main__":
   sp.set_defaults(func=manualDownload)
   
   # optional arguments
-  parser.add_argument("--quality", type=str, help="quality level of video", default="max")
+  sp.add_argument("--quality", type=str, help="quality level of video", default="max")
   
   #############################################################################
   # Process arguments
