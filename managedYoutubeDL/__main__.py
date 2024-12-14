@@ -112,7 +112,7 @@ def manualDownload(**kwargs):
   
   # video quality
   quality = Manager.VideoQuality(kwargs.get("quality"))
-  
+  print("wual", quality)
   # CHECK: quality is supported
   if quality not in Manager.SUPPORTED_QUALITIES:
     raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {Manager.SUPPORTED_QUALITIES}")
