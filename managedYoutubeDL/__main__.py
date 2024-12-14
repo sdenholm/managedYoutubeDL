@@ -40,6 +40,12 @@ logging.getLogger("").addHandler(fileHandler)
 from managedYoutubeDL.manager import Manager
 from managedYoutubeDL import YAMLBuilder
 
+SUPPORTED_QUALITIES = {
+  "max":   "bestvideo+bestaudio",
+  "720p":  "bestvideo[height<=720]+bestaudio",
+  "1080p": "bestvideo[height<=1080]+bestaudio",
+}
+
 
 def initialise(**kwargs):
   manager = Manager.createNewManager(
@@ -105,14 +111,25 @@ def manualDownload(**kwargs):
   # urlList
   urlList = kwargs.get("urlList")
   
+  # video quality
+  quality = kwargs.get("quality")
+  
+  # CHECK: quality is supported
+  if quality not in SUPPORTED_QUALITIES:
+    raise ValueError(f"Unknown video quality {quality}. Supported qualitities: {SUPPORTED_QUALITIES}")
+  
   options = {
-    'quiet': True,
-    'ignoreerrors': True,
-    'outtmpl': os.path.join(manager.downloadDirectory, "%(title)s-%(id)s.%(ext)s"),
-    'ffmpeg_location': manager.ffmpegLocation,
-    'format': 'bestvideo[ext=mp4]+bestaudio[ext=webm]',
-    'merge_output_format': 'mkv'
+    'quiet':                True,
+    'ignoreerrors':         True,
+    'outtmpl':              os.path.join(manager.downloadDirectory, "%(title)s-%(id)s.%(ext)s"),
+    'ffmpeg_location':      manager.ffmpegLocation,
+    'merge_output_format': 'mkv',
+    
+    #'format': 'bestvideo[ext=mp4]+bestaudio[ext=webm]',
+    'format': SUPPORTED_QUALITIES.get(quality, None),
   }
+  
+  ## "bestvideo[height<=720][ext=mp4][vcodec^=avc]+bestaudio[ext=m4a]/best[ext=mp4]/best"
   
   import yt_dlp
   with yt_dlp.YoutubeDL(options) as ydl:
@@ -124,7 +141,7 @@ def manualDownload(**kwargs):
     
 
 
-  
+main = "here"
 if __name__ == "__main__":
   
   #############################################################################
@@ -149,6 +166,8 @@ if __name__ == "__main__":
                   help="location of the configuration file to use")
   sp.set_defaults(func=downloadNew)
   
+  # optional arguments
+  parser.add_argument("--quality", type=str, help="quality level of videos", default="max")
   
   ##############################
   # initialise
@@ -183,6 +202,8 @@ if __name__ == "__main__":
                   help="videos to download")
   sp.set_defaults(func=manualDownload)
   
+  # optional arguments
+  parser.add_argument("--quality", type=str, help="quality level of video", default="max")
   
   #############################################################################
   # Process arguments
