@@ -112,9 +112,11 @@ def manualDownload(**kwargs):
   
   # video quality
   quality_str = kwargs.get("quality")
-  if quality_str not in Manager.VideoQuality:
-    raise SystemError(f"Unknown video quality {quality_str}. Supported qualitities: {[x.value for x in Manager.VideoQuality]}")
-  quality = Manager.VideoQuality(quality_str)
+  try:
+    quality = Manager.VideoQuality(quality_str)
+  except ValueError:
+    st = f"Unknown video quality {quality_str}. Supported qualitities: {[x.value for x in Manager.VideoQuality]}"
+    raise ValueError(st)
   
   options = {
     'quiet':                True,
