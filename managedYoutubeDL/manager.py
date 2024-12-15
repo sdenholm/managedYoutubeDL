@@ -344,7 +344,7 @@ class Manager:
     if self.ffmpegLocation is not None:
       options["ffmpeg_location"]     = self.ffmpegLocation
       #options["format"]              = "bestvideo[ext=mp4]+bestaudio[ext=webm]"
-      options["format"]              = Manager.SUPPORTED_QUALITIES.get(quality, None),
+      options["format"]              = Manager.SUPPORTED_QUALITIES[quality],
       options["merge_output_format"] = "mkv"
   
     # otherwise, use highest quality, mixed audio/video file
@@ -352,7 +352,8 @@ class Manager:
       logger.warning("_download: FFmpeg not in path. Download may not be the highest possible quality")
       options["format"] = "bestaudio/best"
 
-    
+    print("options", options)
+    return
     
     returnQueue = multiprocessing.Queue()
     proc = multiprocessing.Process(
