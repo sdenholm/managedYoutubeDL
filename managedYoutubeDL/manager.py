@@ -344,7 +344,7 @@ class Manager:
     if self.ffmpegLocation is not None:
       options["ffmpeg_location"]     = self.ffmpegLocation
       #options["format"]              = "bestvideo[ext=mp4]+bestaudio[ext=webm]"
-      options["format"]              = Manager.SUPPORTED_QUALITIES[quality],
+      options["format"]              = Manager.SUPPORTED_QUALITIES[quality]
       options["merge_output_format"] = "mkv"
   
     # otherwise, use highest quality, mixed audio/video file
