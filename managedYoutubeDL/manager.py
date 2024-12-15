@@ -351,9 +351,7 @@ class Manager:
     else:
       logger.warning("_download: FFmpeg not in path. Download may not be the highest possible quality")
       options["format"] = "bestaudio/best"
-
-    print("options", options)
-    return
+      
     
     returnQueue = multiprocessing.Queue()
     proc = multiprocessing.Process(
