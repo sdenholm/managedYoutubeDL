@@ -23,6 +23,8 @@ class Manager:
     QUALITY_480P  = "480p"
     QUALITY_720P  = "720p"
     QUALITY_1080P = "1080p"
+    QUALITY_1440P = "1440p"
+    QUALITY_2160P = "2160p"
     
   
   # max time (seconds) to allow for video to download
@@ -40,6 +42,8 @@ class Manager:
     VideoQuality.QUALITY_480P:  "bestvideo[height<=480]+bestaudio",
     VideoQuality.QUALITY_720P:  "bestvideo[height<=720]+bestaudio",
     VideoQuality.QUALITY_1080P: "bestvideo[height<=1080]+bestaudio",
+    VideoQuality.QUALITY_1440P: "bestvideo[height<=1440]+bestaudio",
+    VideoQuality.QUALITY_2160P: "bestvideo[height<=2160]+bestaudio",
   }
   
   def setClientSecretsFile(self, value):
