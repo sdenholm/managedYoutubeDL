@@ -465,7 +465,7 @@ class Manager:
           for key in local_key_list:
             logger.info(f"  -{key.ljust(max_key_name_len)}: {format_info[key]}")
             
-        #logger.info(info["filesize_approx"] / (1024 * 1024))
+        logger.info(info["filesize_approx"] / (1024 * 1024))
         
         #now       = str(datetime.datetime.now().replace(microsecond=0)).replace(" ", "--").replace(":","-")
         #file_name = f"{now}--delme_file_info.json"
