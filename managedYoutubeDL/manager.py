@@ -1,3 +1,4 @@
+import json
 import logging
 logger = logging.getLogger(__name__)
 
@@ -452,11 +453,10 @@ class Manager:
         
         #
         logger.info(info["filesize_approx"] / (1024 * 1024))
-        info_str = ""
-        for k,v in info.items():
-          info_str += f"{k}:{v}, "
-        logger.info("no video info found..." if len(info_str) == 0 else info_str[:-2])
-        ##logger.info(videoInfo["filesize"]/(1024*1024))
+        now       = str(datetime.datetime.now().replace(microsecond=0)).replace(" ", "--").replace(":","-")
+        file_name = f"{now}--delme_file_info.json"
+        with open(file_name, "w") as fi:
+          json.dump(info, fi, indent=2)
       except Exception as err:
         logger.info("File size test failed: {}".format(err))
 
