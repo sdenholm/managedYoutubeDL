@@ -452,6 +452,10 @@ class Manager:
         
         #
         logger.info(info["filesize_approx"] / (1024 * 1024))
+        info_str = ""
+        for k,v in info.items():
+          info_str += f"{k}:{v}, "
+        logger.info("no video info found..." if len(info_str) == 0 else info_str[:-2])
         ##logger.info(videoInfo["filesize"]/(1024*1024))
       except Exception as err:
         logger.info("File size test failed: {}".format(err))
