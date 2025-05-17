@@ -451,12 +451,27 @@ class Manager:
         videoInfo = info["requested_formats"][0]
         audioInfo = info["requested_formats"][1]
         
-        #
-        logger.info(info["filesize_approx"] / (1024 * 1024))
-        now       = str(datetime.datetime.now().replace(microsecond=0)).replace(" ", "--").replace(":","-")
-        file_name = f"{now}--delme_file_info.json"
-        with open(file_name, "w") as fi:
-          json.dump(info, fi, indent=2)
+        logger.info("Download options:")
+        for k, v in options.items():
+          print(f"  -{k}: {v}")
+        
+        key_list = ["format_id", "format_note", "resolution", "height", "width", "ext", "preference",
+                    "source_preference", "quality", "filesize_approx"]
+        req_format_info = info.get("requested_formats", {})
+        logger.info("Requested Format Info:")
+        for key in key_list:
+          if key in req_format_info:
+            logger.info(f"  -{key}: {req_format_info[key]}")
+            
+        #logger.info(info["filesize_approx"] / (1024 * 1024))
+        
+        #now       = str(datetime.datetime.now().replace(microsecond=0)).replace(" ", "--").replace(":","-")
+        #file_name = f"{now}--delme_file_info.json"
+        #with open(file_name, "w") as fi:
+        #  json.dump(info, fi, indent=2)
+        
+        
+        
       except Exception as err:
         logger.info("File size test failed: {}".format(err))
 
