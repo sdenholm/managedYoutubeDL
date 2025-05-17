@@ -461,9 +461,9 @@ class Manager:
         logger.info("Requested Format Info:")
         for format_info in req_format_list:
           local_key_list   = [k for k in key_list if k in format_info]
-          max_key_name_len = max[len(x) for x in key_list]
+          max_key_name_len = max([len(x) for x in key_list])
           for key in local_key_list:
-            logger.info(f"  -{key.ljust(max_key_name_len)}}: {format_info[key]}")
+            logger.info(f"  -{key.ljust(max_key_name_len)}: {format_info[key]}")
             
         #logger.info(info["filesize_approx"] / (1024 * 1024))
         
