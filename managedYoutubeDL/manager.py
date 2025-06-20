@@ -341,7 +341,7 @@ class Manager:
       "quiet":         True,
       "ignoreerrors":  True,
       "outtmpl":       videoLoc,
-      "check-formats": True,
+      "check_formats": True, # "selected"
     }
     
     # if ffmpeg is defined we can download the highest quality video and audio
