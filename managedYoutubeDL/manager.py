@@ -338,9 +338,10 @@ class Manager:
   
     # set the basic options
     options = {
-      "quiet":        True,
-      "ignoreerrors": True,
-      "outtmpl":      videoLoc
+      "quiet":         True,
+      "ignoreerrors":  True,
+      "outtmpl":       videoLoc,
+      "check-formats": True,
     }
     
     # if ffmpeg is defined we can download the highest quality video and audio
