@@ -342,6 +342,7 @@ class Manager:
       "ignoreerrors":  True,
       "outtmpl":       videoLoc,
       "check_formats": "selected", # "selected" True
+      "source_address": "0.0.0.0", # force use of ipv4
     }
     
     # if ffmpeg is defined we can download the highest quality video and audio
