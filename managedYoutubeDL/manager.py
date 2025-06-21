@@ -452,21 +452,23 @@ class Manager:
         videoInfo = info["requested_formats"][0]
         audioInfo = info["requested_formats"][1]
         
-        logger.info("Download options:")
-        for k, v in options.items():
-          print(f"  -{k}: {v}")
+        # SD: file info printed here
+        
+        #logger.info("Download options:")
+        #for k, v in options.items():
+        #  print(f"  -{k}: {v}")
         
         key_list = ["format_id", "format_note", "resolution", "height", "width", "ext", "preference",
                     "source_preference", "quality", "filesize_approx"]
         req_format_list = info.get("requested_formats", [])
-        logger.info("Requested Format Info:")
-        for format_info in req_format_list:
-          local_key_list   = [k for k in key_list if k in format_info]
-          max_key_name_len = max([len(x) for x in key_list])
-          for key in local_key_list:
-            logger.info(f"  -{key.ljust(max_key_name_len)}: {format_info[key]}")
+        #logger.info("Requested Format Info:")
+        #for format_info in req_format_list:
+        #  local_key_list   = [k for k in key_list if k in format_info]
+        #  max_key_name_len = max([len(x) for x in key_list])
+        #  for key in local_key_list:
+        #    logger.info(f"  -{key.ljust(max_key_name_len)}: {format_info[key]}")
             
-        logger.info(info["filesize_approx"] / (1024 * 1024))
+        #logger.info(info["filesize_approx"] / (1024 * 1024))
         
         #now       = str(datetime.datetime.now().replace(microsecond=0)).replace(" ", "--").replace(":","-")
         #file_name = f"{now}--delme_file_info.json"
