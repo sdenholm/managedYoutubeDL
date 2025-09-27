@@ -335,7 +335,14 @@ class Manager:
     # assemble the video's name and download location
     videoName = "{}--%(title)s-%(id)s.%(ext)s".format(channelName)
     videoLoc = os.path.join(self.downloadDirectory, videoName)
-  
+
+    """
+    cookiesfrombrowser:  A tuple containing the name of the browser, the profile
+                     name/path from where cookies are loaded, the name of the keyring,
+                     and the container name, e.g. ('chrome', ) or
+                     ('vivaldi', 'default', 'BASICTEXT') or ('firefox', 'default', None, 'Meta')
+    """
+
     # set the basic options
     options = {
       "quiet":         True,
@@ -343,8 +350,12 @@ class Manager:
       "outtmpl":       videoLoc,
       "check_formats": "selected", # "selected" True
       "source_address": "0.0.0.0", # force use of ipv4
+      # #--extractor-args "youtube:player-client=default,-tv_simply
+      #'extractor_args': {'youtube': {'player_client': ['default', "tv_simply"]}},
+      #'cookiesfrombrowser': ('firefox', None, None, None)
     }
-    
+    for k,v in options.items():
+        print(k,v)
     # if ffmpeg is defined we can download the highest quality video and audio
     # and combine them together
     # --format bestvideo[ext=mp4]+bestaudio[ext=webm] --merge_output_format mkv
