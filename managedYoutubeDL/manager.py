@@ -354,8 +354,7 @@ class Manager:
       #'extractor_args': {'youtube': {'player_client': ['default', "tv_simply"]}},
       #'cookiesfrombrowser': ('firefox', None, None, None)
     }
-    for k,v in options.items():
-        print(k,v)
+    
     # if ffmpeg is defined we can download the highest quality video and audio
     # and combine them together
     # --format bestvideo[ext=mp4]+bestaudio[ext=webm] --merge_output_format mkv
