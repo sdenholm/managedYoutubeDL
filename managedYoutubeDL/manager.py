@@ -776,35 +776,48 @@ class Manager:
     :return:
     """
   
-    # load the existing channel list
+    # load the existing (stale) list of channels
     channelList = [] + self.channelList
     
     # how many channels do we know about
     numKnownChannels = len(channelList)
     logger.debug("updateChannels: Found {} channels in the current channel list".format(numKnownChannels))
   
-    # fetch currently subscribed channels
+    # fetch the currently subscribed channels
     currentChannels = self.ytFetcher.fetchMySubscribedChannels()
     
-    # for each of the CURRENTLY SUBSCRIBED channels
-    #  -add it to the channel list if it's not already there
-    numAdded = 0
-    for channel in currentChannels:
-      if channel not in channelList:
-        logger.debug("updateChannels: Adding channel: {}".format(channel.title))
-        numAdded += 1
-        channelList.append(channel)
-    logger.debug("updateChannels: Found {} new channels".format(numAdded))
+    # separate out the new channels added and old channels removed
+    newChannels = [ch for ch in currentChannels if ch not in channelList]
+    remChannels = [ch for ch in channelList if ch not in currentChannels]
     
-    # for each EXISTING channel
-    #  -remove it from the list if it's not a current channel
-    numKnownChannels = len(channelList)
-    channelList      = list(filter(lambda _ch: _ch in currentChannels, channelList))
-    numRemoved       = numKnownChannels - len(channelList)
-    logger.debug("updateChannels: Removed {} old channels".format(numRemoved))
+    # add the new channels
+    for channel in newChannels:
+      logger.info("Adding channel: {}".format(channel.title))
+      channelList.append(channel)
+    
+    # log the removed channels
+    for channel in remChannels:
+      logger.info("Removing channel: {}".format(channel.title))
+    
+    ## for each of the CURRENTLY SUBSCRIBED channels
+    ##  -add it to the channel list if it's not already there
+    #numAdded = 0
+    #for channel in currentChannels:
+    #  if channel not in channelList:
+    #    logger.debug("updateChannels: Adding channel: {}".format(channel.title))
+    #    numAdded += 1
+    #    channelList.append(channel)
+    #logger.debug("updateChannels: Found {} new channels".format(numAdded))
+    
+    ## for each EXISTING channel
+    ##  -remove it from the list if it's not a current channel
+    #numKnownChannels = len(channelList)
+    #channelList      = list(filter(lambda _ch: _ch in currentChannels, channelList))
+    #numRemoved       = numKnownChannels - len(channelList)
+    #logger.debug("updateChannels: Removed {} old channels".format(numRemoved))
 
     # store the channel list
     self.setChannelList(channelList)
     
-    return numAdded, numRemoved
+    return len(newChannels), len(remChannels)
   
