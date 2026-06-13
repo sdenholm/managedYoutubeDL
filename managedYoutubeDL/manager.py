@@ -586,10 +586,10 @@ class Manager:
     width = len(str(numVideos))
     n = 0
     for channel, videoList in channelVideos:
-      logger.info("  {}[{}]{}".format(_BOLD, channel.title, _RESET))
+      logger.info("  {}{}{}".format(_BOLD, channel.title, _RESET))
       for video in videoList:
         n += 1
-        logger.info("    • [{}] {} - {}".format(str(n).rjust(width), video.id, video.title))
+        logger.info("    • [{}] {}".format(str(n).rjust(width), video.title))
     
     
     # for each channel's videos:
