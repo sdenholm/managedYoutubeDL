@@ -1,11 +1,10 @@
-import json
 import logging
 logger = logging.getLogger(__name__)
 
 import datetime
 import os
 import re
-import sys
+import shutil
 import time
 from enum import Enum
 import multiprocessing
@@ -134,8 +133,8 @@ class Manager:
         raise TypeError("globalMinVideoLength must be either a timedelta or an int")
   
     else:
-      self.globalMaxVideoLength = value
-    
+      self.globalMinVideoLength = value
+
   def setGlobalMaxVideoLength(self, value):
     
     if value is not None:
@@ -153,16 +152,10 @@ class Manager:
   @staticmethod
   def _getFFmpegInPath():
     """
-    # Return the location of FFmpeg by searching the PATH
+    # Return the location of FFmpeg by searching the system PATH
     :return:
     """
-    for pathDir in sys.path:
-      if os.path.isdir(pathDir) and os.path.exists(pathDir):
-        for possibleName in ["ffmpeg", "ffmpeg.exe"]:
-          possiblePath = os.path.join(pathDir, possibleName)
-          if os.path.exists(possiblePath):
-            return possiblePath
-    return None
+    return shutil.which("ffmpeg")
   
   
   @staticmethod
@@ -246,7 +239,7 @@ class Manager:
     
     # video date filters
     self.setGlobalMinVideoDate(kwargs.get("globalMinVideoDate", datetime.datetime.utcfromtimestamp(0)))
-    self.setGlobalMaxVideoDate(kwargs.get("globalMaxVideoDate", datetime.datetime.utcfromtimestamp(2**32)))
+    self.setGlobalMaxVideoDate(kwargs.get("globalMaxVideoDate", None))
   
     # video title filters
     self.setGlobalIncludeFilter(kwargs.get("globalIncludeFilter", None))
@@ -346,6 +339,7 @@ class Manager:
     # set the basic options
     options = {
       "quiet":         True,
+      "updatetime":    False,
       "ignoreerrors":  True,
       "outtmpl":       videoLoc,
       "check_formats": "selected", # "selected" True
@@ -384,7 +378,10 @@ class Manager:
       proc.terminate()
       proc.kill()
       raise TimeoutError()
-    return returnQueue.get()
+    try:
+      return returnQueue.get(timeout=5)
+    except Exception:
+      return False
     
     # download the video and return whether we were successful
     #return Manager._callYoutubeDL(options, [self.ytFetcher.assembleVideoURL(video.id)])
@@ -491,7 +488,7 @@ class Manager:
         
         
       except Exception as err:
-        logger.info("File size test failed: {}".format(err))
+        logger.warning("File size test failed: {}".format(err), exc_info=True)
 
       returnCode = ydl.download(urlList)
     
@@ -581,20 +578,23 @@ class Manager:
     else:              logger.info("Found {} new videos".format(numVideos))
     
     # print a list of the video titles
-    #  -NOTE: this is general copy of the youtube-dl format in _downloadVideo()
-    #         so may not 100% match the download file name
+    width = len(str(numVideos))
+    n = 0
     for channel, videoList in channelVideos:
-      logger.info("{}".format(channel.title))
+      logger.info("  [{}]".format(channel.title))
       for video in videoList:
-        logger.info("--{}-{}".format(video.title, video.id))
+        n += 1
+        logger.info("    • [{}] {} - {}".format(str(n).rjust(width), video.id, video.title))
     
     
     # for each channel's videos:
+    n = 0
+    logger.info("Downloading:")
     for channel, videoList in channelVideos:
-      logger.info("Downloading from channel: {}".format(channel.title))
-      
+
       for video in videoList:
-        logger.info("Downloading video: {}".format(video.title))
+        n += 1
+        logger.info("  [{}/{}] {}: {}".format(n, numVideos, channel.title, video.title))
 
         while True:
           try:
@@ -660,7 +660,14 @@ class Manager:
         }.get(comparison)(value1, value2)
     
     logger.debug("filterChannelVideos: Filtering channel: {}".format(channel.title))
-  
+
+    # compile regex filters once before the video loop
+    _flags = re.MULTILINE | re.IGNORECASE
+    channelIncludePattern = re.compile(channel.includeFilter,      _flags) if channel.includeFilter      else None
+    globalIncludePattern  = re.compile(self.globalIncludeFilter,   _flags) if self.globalIncludeFilter   else None
+    channelExcludePattern = re.compile(channel.excludeFilter,      _flags) if channel.excludeFilter      else None
+    globalExcludePattern  = re.compile(self.globalExcludeFilter,   _flags) if self.globalExcludeFilter   else None
+
     # filter each channel video
     approvedVideos = []
     for video in videoList:
@@ -671,20 +678,20 @@ class Manager:
       #########################################################################
       if not isinstance(video, Video):
         raise TypeError("{} is not a Video".format(video))
-      
-      
+
+
       #########################################################################
       # FILTER: not seen this video before
       #########################################################################
       if self.haveSeenVideo(channel, video):
         logger.debug("filterChannelVideos: FILTERED OUT: seen before")
         continue
-        
-        
+
+
       #########################################################################
       # FILTER: video min/max date
       #########################################################################
-      
+
       minVideoDate = _compare("max", channel.minVideoDate, self.globalMinVideoDate)
       if not (minVideoDate is None or video.publishedAt >= minVideoDate):
         logger.debug("filterChannelVideos: FILTERED OUT: published before min date")
@@ -693,42 +700,38 @@ class Manager:
       if not (maxVideoDate is None or video.publishedAt <= maxVideoDate):
         logger.debug("filterChannelVideos: FILTERED OUT: published after max date")
         continue
-      
-        
+
+
       #########################################################################
       # FILTER: regex video title inclusion
       #########################################################################
-      
+
       # channel filter
-      if channel.includeFilter:
-        includePattern = re.compile(channel.includeFilter, re.MULTILINE | re.IGNORECASE)
-        if len(includePattern.findall(video.title)) == 0:
+      if channelIncludePattern:
+        if len(channelIncludePattern.findall(video.title)) == 0:
           logger.debug("filterChannelVideos: FILTERED OUT: didn't match include filter")
           continue
-          
+
       # global filter
-      if self.globalIncludeFilter:
-        includePattern = re.compile(self.globalIncludeFilter, re.MULTILINE | re.IGNORECASE)
-        if len(includePattern.findall(video.title)) == 0:
+      if globalIncludePattern:
+        if len(globalIncludePattern.findall(video.title)) == 0:
           logger.debug("filterChannelVideos: FILTERED OUT: didn't match include filter")
           continue
-          
-          
+
+
       #########################################################################
       # FILTER: regex video title exclusion
       #########################################################################
 
       # channel filter
-      if channel.excludeFilter:
-        excludePattern = re.compile(channel.excludeFilter, re.MULTILINE | re.IGNORECASE)
-        if len(excludePattern.findall(video.title)) > 0:
+      if channelExcludePattern:
+        if len(channelExcludePattern.findall(video.title)) > 0:
           logger.debug("filterChannelVideos: FILTERED OUT: matched exclude filter")
           continue
 
       # global filter
-      if self.globalExcludeFilter:
-        excludePattern = re.compile(self.globalExcludeFilter, re.MULTILINE | re.IGNORECASE)
-        if len(excludePattern.findall(video.title)) > 0:
+      if globalExcludePattern:
+        if len(globalExcludePattern.findall(video.title)) > 0:
           logger.debug("filterChannelVideos: FILTERED OUT: matched exclude filter")
           continue
           
@@ -745,8 +748,7 @@ class Manager:
         # get this video's duration
         videoDetails = self.ytFetcher.fetchVideoDetails(video)
         if videoDetails is None or videoDetails["duration"] is None:
-          logger.error("filterChannelVideos: unable to determine duration of video: {}"
-                       .format(video.title))
+          logger.error("Skipped (duration unknown): [{}] {}".format(channel.title, video.title))
           continue
       
         # reject this video if it's too short or too long

@@ -26,13 +26,14 @@ class YAMLBuilder:
     
     # load the data
     with open(fileLoc, 'r') as f:
-      
-      # add constructors for: Channel, Manager, Timedelta
+
+      # build a local loader so we don't mutate the global yaml.SafeLoader singleton
+      class _Loader(yaml.SafeLoader):
+        pass
       for builderClass in [YAMLBuilder.Channel, YAMLBuilder.Manager, YAMLBuilder.Timedelta]:
-        yaml.SafeLoader.add_constructor(builderClass.YAML_TAG, builderClass.constructor)
-      
-      # load the yaml data into the manager
-      return yaml.safe_load(f)
+        _Loader.add_constructor(builderClass.YAML_TAG, builderClass.constructor)
+
+      return yaml.load(f, Loader=_Loader)
     
   
   @staticmethod
@@ -55,14 +56,15 @@ class YAMLBuilder:
     
     # dump the data
     with open(fileLoc, 'w') as f:
-  
-      # add representers for: Channel, Manager, Timedelta
-      yaml.SafeDumper.add_representer(Channel, YAMLBuilder.Channel.representer)
-      yaml.SafeDumper.add_representer(Manager, YAMLBuilder.Manager.representer)
-      yaml.SafeDumper.add_representer(timedelta, YAMLBuilder.Timedelta.representer)
-      
-      # dump the manager
-      yaml.safe_dump(manager, f)
+
+      # build a local dumper so we don't mutate the global yaml.SafeDumper singleton
+      class _Dumper(yaml.SafeDumper):
+        pass
+      _Dumper.add_representer(Channel, YAMLBuilder.Channel.representer)
+      _Dumper.add_representer(Manager, YAMLBuilder.Manager.representer)
+      _Dumper.add_representer(timedelta, YAMLBuilder.Timedelta.representer)
+
+      yaml.dump(manager, f, Dumper=_Dumper)
   
   
   @staticmethod

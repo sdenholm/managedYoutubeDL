@@ -72,13 +72,11 @@ def downloadNew(**kwargs):
   
   # download new videos
   numDownloaded, numFailed = manager.downloadNewVideos(quality=quality)
-  logger.info("{} videos downloaded. {} failed.".format(numDownloaded, numFailed))
-  
   # safe dump the manager
   YAMLBuilder.safeDumpManager(manager, configFileLocation, overwrite=True)
-  
-  # how many API credits did we use
-  logger.info("Used {} API credits".format(manager.getAPICreditsUsed()))
+
+  logger.info("{} downloaded. {} failed. ({} API credits)".format(
+      numDownloaded, numFailed, manager.getAPICreditsUsed()))
   
 
 def updateChannels(**kwargs):
@@ -128,6 +126,7 @@ def manualDownload(**kwargs):
   
   options = {
     'quiet':                True,
+    'updatetime':           False,
     'ignoreerrors':         True,
     'outtmpl':              os.path.join(manager.downloadDirectory, "%(title)s-%(id)s.%(ext)s"),
     'ffmpeg_location':      manager.ffmpegLocation,
