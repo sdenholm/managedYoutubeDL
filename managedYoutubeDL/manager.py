@@ -345,6 +345,7 @@ class Manager:
       "check_formats": "selected", # "selected" True
       "source_address": "0.0.0.0", # force use of ipv4
       #"extractor_args": {'youtube': {'player_client': ['tv', 'mweb']}},  # "youtube:player-client=tv,mweb",
+      #"extractor_args": {'youtube': {'player_client': ['default', '-android_sdkless']}},
       "extractor_args": {'youtube': {'player_client': ['default']}},
       # #--extractor-args "youtube:player-client=default,-tv_simply
       #'extractor_args': {'youtube': {'player_client': ['default', "tv_simply"]}},
