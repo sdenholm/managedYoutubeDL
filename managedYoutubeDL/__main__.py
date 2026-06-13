@@ -126,7 +126,7 @@ def manualDownload(**kwargs):
   
   options = {
     'quiet':                True,
-    'updatetime':           False,
+    'no_warnings':          True,
     'ignoreerrors':         True,
     'outtmpl':              os.path.join(manager.downloadDirectory, "%(title)s-%(id)s.%(ext)s"),
     'ffmpeg_location':      manager.ffmpegLocation,

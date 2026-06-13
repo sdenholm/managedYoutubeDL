@@ -5,6 +5,7 @@ import datetime
 import os
 import re
 import shutil
+import sys
 import time
 from enum import Enum
 import multiprocessing
@@ -15,6 +16,9 @@ from managedYoutubeDL.items import Channel, Video
 
 #import youtube_dl
 import yt_dlp
+
+_BOLD  = "\033[1m" if sys.stderr.isatty() else ""
+_RESET = "\033[0m" if sys.stderr.isatty() else ""
 
 class Manager:
   
@@ -339,7 +343,7 @@ class Manager:
     # set the basic options
     options = {
       "quiet":         True,
-      "updatetime":    False,
+      "no_warnings":   True,
       "ignoreerrors":  True,
       "outtmpl":       videoLoc,
       "check_formats": "selected", # "selected" True
@@ -582,7 +586,7 @@ class Manager:
     width = len(str(numVideos))
     n = 0
     for channel, videoList in channelVideos:
-      logger.info("  [{}]".format(channel.title))
+      logger.info("  {}[{}]{}".format(_BOLD, channel.title, _RESET))
       for video in videoList:
         n += 1
         logger.info("    • [{}] {} - {}".format(str(n).rjust(width), video.id, video.title))
