@@ -579,6 +579,7 @@ class Manager:
       numVideos = 0
     else:
       numVideos = sum([len(videoList) for _, videoList in channelVideos])
+    logger.info("")
     if numVideos == 1: logger.info("Found 1 new video")
     else:              logger.info("Found {} new videos".format(numVideos))
     
@@ -589,11 +590,12 @@ class Manager:
       logger.info("  {}{}{}".format(_BOLD, channel.title, _RESET))
       for video in videoList:
         n += 1
-        logger.info("    • [{}] {}".format(str(n).rjust(width), video.title))
+        logger.info("    [{}] {}".format(str(n).rjust(width), video.title))
     
     
     # for each channel's videos:
     n = 0
+    logger.info("")
     logger.info("Downloading:")
     for channel, videoList in channelVideos:
 

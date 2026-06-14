@@ -114,7 +114,7 @@ Values: `max`, `480p`, `720p`, `1080p`, `1440p`, `2160p`. Maps to yt-dlp format 
 **`downloadNewVideos(quality)`** — main download loop:
 1. Separate `ignore=True` channels from active ones
 2. For each active channel, call `fetchRecentVideos()` then `filterChannelVideos()`
-3. Print a summary of all approved videos grouped by channel: `[Channel Name]` header, then `• [N] ID - title` per video (number right-padded to the total video count width so columns align)
+3. Print a summary of all approved videos grouped by channel: `[Channel Name]` header, then `[N] title` per video (number right-padded to the total video count width so columns align)
 4. For each approved video, log `[N/total] Channel: Title` then call `_downloadVideo()` in a retry loop:
    - On success: add to `seenChannelVideos`, update `channel.minVideoDate`, sleep `WAIT_BETWEEN_DOWNLOADS` (10 s)
    - On `TimeoutError`: sleep `postTimeoutWait` then retry indefinitely
@@ -176,9 +176,26 @@ Entry point when running `python -m managedYoutubeDL`.
 | Subcommand | Function | What it does |
 |---|---|---|
 | `init <secrets> <config>` | `initialise()` | OAuth flow + write initial config |
-| `download-new <config> [--quality]` | `downloadNew()` | Load config → download → safe-dump updated config → log `N downloaded. N failed. (N API credits)` |
+| `download-new <config> [--quality]` | `downloadNew()` | Load config → download → safe-dump updated config → prints blank-line-separated sections: channel count, found-video summary, downloading progress, final `N downloaded. N failed. (N API credits)` |
 | `update-channels <config>` | `updateChannels()` | Load config → sync subscriptions → safe-dump if changed |
 | `manual-download <config> <url...> [--quality]` | `manualDownload()` | Download arbitrary URLs using the config's ffmpeg/directory settings; no API calls, no seen-video tracking |
+
+**`download-new` terminal output format:**
+```
+Checking N channels
+
+Found N new videos
+  Channel Name
+    [1] Video title
+  Channel Name
+    [2] Video title
+
+Downloading:
+  [1/N] Channel Name: Video title
+  [2/N] Channel Name: Video title
+
+N downloaded. N failed. (N API credits)
+```
 
 ---
 
@@ -253,6 +270,7 @@ FFmpeg is an external binary dependency (not a Python package). Its location is 
 
 - **`test_instantiation` in `tests/test_manager.py` fails** — the test's expected attribute list does not include `downloadTimeout` or `postTimeoutWait`, which were added to `Manager` after the test was written. This is a stale test, not a runtime bug.
 - **`\d` in regex in `fetcher.py:106`** produces a `SyntaxWarning` in Python 3.12 — the string should be a raw string (`r"^PT(\d..."`) to suppress it. Functionally harmless.
+- **`datetime.datetime.utcfromtimestamp()` in `manager.py:245`** produces a `DeprecationWarning` in Python 3.12 — scheduled for removal in a future Python version. Should be replaced with `datetime.datetime.fromtimestamp(ts, datetime.UTC)`. Also present in `tests/test_manager.py`.
 - **`seenChannelVideos` grows unboundedly** — video IDs are never pruned. For long-running installs with many channels, the YAML config file will grow large over time. A future improvement could evict entries older than some cutoff date.
 - **Downloads are always sequential** — one video at a time with a 10-second sleep between each. There is no concurrency. This is simple and safe but slow when many new videos are found.
 - **`manual-download` calls `manager.getAPICreditsUsed()` in its log output** but makes no API calls; it will always report 0 credits. (Cosmetic; not currently logged by `manualDownload()` anyway.)

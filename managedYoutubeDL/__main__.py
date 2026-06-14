@@ -75,6 +75,7 @@ def downloadNew(**kwargs):
   # safe dump the manager
   YAMLBuilder.safeDumpManager(manager, configFileLocation, overwrite=True)
 
+  logger.info("")
   logger.info("{} downloaded. {} failed. ({} API credits)".format(
       numDownloaded, numFailed, manager.getAPICreditsUsed()))
   
