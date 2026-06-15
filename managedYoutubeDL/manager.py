@@ -242,7 +242,7 @@ class Manager:
     self.setSeenChannelVideos(kwargs.get("seenChannelVideos", {}))
     
     # video date filters
-    self.setGlobalMinVideoDate(kwargs.get("globalMinVideoDate", datetime.datetime.utcfromtimestamp(0)))
+    self.setGlobalMinVideoDate(kwargs.get("globalMinVideoDate", datetime.datetime.fromtimestamp(0, datetime.timezone.utc)))
     self.setGlobalMaxVideoDate(kwargs.get("globalMaxVideoDate", None))
   
     # video title filters
@@ -513,7 +513,7 @@ class Manager:
     currentSeenVideos = self.seenChannelVideos.get(channel.id, [])
     if video.id not in currentSeenVideos:
       currentSeenVideos.append(video.id)
-      self.seenChannelVideos[channel.id] = currentSeenVideos
+      self.seenChannelVideos[channel.id] = currentSeenVideos[-25:]
       
       
   def haveSeenVideo(self, channel: Channel, video: Video) -> bool:
@@ -601,7 +601,7 @@ class Manager:
 
       for video in videoList:
         n += 1
-        logger.info("  [{}/{}] {}: {}".format(n, numVideos, channel.title, video.title))
+        logger.info("  [{}/{}] {}{}{}: {}".format(n, numVideos, _BOLD, channel.title, _RESET, video.title))
 
         while True:
           try:
@@ -634,7 +634,7 @@ class Manager:
           
           except TimeoutError:
             waitingTime = 0 if self.postTimeoutWait is None else self.postTimeoutWait.total_seconds()
-            wakeTime = datetime.datetime.now() + datetime.timedelta(seconds=waitingTime)
+            wakeTime = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=waitingTime)
             logger.error("Download timed out. Waiting {}s (until {})"
                          .format(waitingTime, wakeTime))
             time.sleep(waitingTime)
@@ -804,10 +804,11 @@ class Manager:
       logger.info("Adding channel: {}".format(channel.title))
       channelList.append(channel)
     
-    # log the removed channels
+    # remove and log the removed channels
     for channel in remChannels:
       logger.info("Removing channel: {}".format(channel.title))
-    
+    channelList = [ch for ch in channelList if ch not in remChannels]
+
     ## for each of the CURRENTLY SUBSCRIBED channels
     ##  -add it to the channel list if it's not already there
     #numAdded = 0

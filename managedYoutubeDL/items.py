@@ -89,7 +89,7 @@ class Channel(Item):
     self.setIncludeFilter(kwargs.get("includeFilter", None))
     
     # date filter: published after
-    self.setMinVideoDate(kwargs.get("minVideoDate", datetime.datetime.utcfromtimestamp(0)))
+    self.setMinVideoDate(kwargs.get("minVideoDate", datetime.datetime.fromtimestamp(0, datetime.timezone.utc)))
     self.setMaxVideoDate(kwargs.get("maxVideoDate", None))
     
     

@@ -130,7 +130,7 @@ class YAMLBuilder:
           logger.warning(msg)
         
           # backup the original config file file
-          now = str(datetime.datetime.utcnow().replace(microsecond=0)).replace(":", "-").replace(" ", "--")
+          now = str(datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)).replace(":", "-").replace(" ", "--")
           backupFileLoc = "{}.{}.old".format(fileLoc, now)
           shutil.move(fileLoc, backupFileLoc)
         

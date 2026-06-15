@@ -32,6 +32,35 @@ sudo python3 -m unittest tests.test_yamlBuilder.test_YAMLBuilder.
 """
 
 
+def dumpWithLocalYAML(obj, fileLoc):
+  """
+  # Dump <obj> using local YAML subclasses so the global yaml.SafeDumper
+  # singleton is left untouched. This mirrors how YAMLBuilder works in
+  # production and avoids leaking representers into global state.
+  """
+  class _Dumper(yaml.SafeDumper):
+    pass
+  _Dumper.add_representer(timedelta, YAMLBuilder.Timedelta.representer)
+  _Dumper.add_representer(Channel,   YAMLBuilder.Channel.representer)
+  _Dumper.add_representer(Manager,   YAMLBuilder.Manager.representer)
+  with open(fileLoc, "w") as f:
+    yaml.dump(obj, f, Dumper=_Dumper)
+
+
+def loadWithLocalYAML(fileLoc):
+  """
+  # Load using local YAML subclasses so the global yaml.SafeLoader singleton
+  # is left untouched (mirrors YAMLBuilder's production approach).
+  """
+  class _Loader(yaml.SafeLoader):
+    pass
+  _Loader.add_constructor(YAMLBuilder.Timedelta.YAML_TAG, YAMLBuilder.Timedelta.constructor)
+  _Loader.add_constructor(YAMLBuilder.Channel.YAML_TAG,   YAMLBuilder.Channel.constructor)
+  _Loader.add_constructor(YAMLBuilder.Manager.YAML_TAG,   YAMLBuilder.Manager.constructor)
+  with open(fileLoc, "r") as f:
+    return yaml.load(f, Loader=_Loader)
+
+
 class test_YAMLBuilder(unittest.TestCase):
   TEST_ALL = True
   
@@ -62,8 +91,8 @@ class test_YAMLBuilder(unittest.TestCase):
       "downloadDirectory":    str(os.path.dirname(os.path.realpath(__file__))),
       "ffmpegLocation":       str(os.path.realpath(__file__)),
       "channelList":          [],
-      "globalMinVideoDate":   str(datetime.datetime.utcfromtimestamp(0)),
-      "globalMaxVideoDate":   str(datetime.datetime.utcfromtimestamp(1)),
+      "globalMinVideoDate":   datetime.datetime.fromtimestamp(0, datetime.timezone.utc),
+      "globalMaxVideoDate":   datetime.datetime.fromtimestamp(1, datetime.timezone.utc),
       "seenChannelVideos":    {"a": "b"},
       "globalIncludeFilter":  "something",
       "globalExcludeFilter":  "other",
@@ -228,6 +257,36 @@ class test_YAMLBuilder(unittest.TestCase):
     YAMLBuilder.dumpManager = originalDumpFn
 
 
+  def test_safeDump_happyPathNoBackup(self):
+    """
+    # The common case that runs on every download-new / update-channels:
+    # a small/no size change overwrites in place, creates NO ".old" backup,
+    # and the written file reloads to an equivalent Manager.
+    """
+    logger.info("test_safeDump_happyPathNoBackup")
+
+    manager, arguments = test_YAMLBuilder.createmanager()
+
+    with tempfile.TemporaryDirectory() as tmpDir:
+      tempFileLoc = os.path.join(tmpDir, "temp_config.yaml")
+
+      # first dump establishes the baseline config file
+      YAMLBuilder.safeDumpManager(manager, tempFileLoc)
+      self.assertTrue(os.path.exists(tempFileLoc))
+
+      # second dump of the same manager: size is unchanged, so it should
+      # overwrite in place WITHOUT creating a ".old" backup file
+      YAMLBuilder.safeDumpManager(manager, tempFileLoc, overwrite=True)
+
+      # TEST: the config is the only file present (no backup littering)
+      dirFiles = sorted(item.name for item in os.scandir(tmpDir) if item.is_file())
+      self.assertListEqual(dirFiles, [os.path.basename(tempFileLoc)])
+
+      # TEST: the written config reloads to an equivalent manager
+      loadedManager = YAMLBuilder.loadManager(tempFileLoc)
+      for argName in arguments.keys():
+        self.assertEqual(getattr(manager, argName), getattr(loadedManager, argName))
+
 
   def test_Channel(self):
     """  """
@@ -236,12 +295,12 @@ class test_YAMLBuilder(unittest.TestCase):
     arguments = {
       "title":          "string title",
       "id":             "string id",
-      "publishedAt":    str(datetime.datetime.utcfromtimestamp(0)),
+      "publishedAt":    datetime.datetime.fromtimestamp(0, datetime.timezone.utc),
       "ignore":         False,
       "excludeFilter":  "string exclude filter",
       "includeFilter":  "string include filter",
-      "minVideoDate":   str(datetime.datetime.utcfromtimestamp(1)),
-      "maxVideoDate":   str(datetime.datetime.utcfromtimestamp(2)),
+      "minVideoDate":   datetime.datetime.fromtimestamp(1, datetime.timezone.utc),
+      "maxVideoDate":   datetime.datetime.fromtimestamp(2, datetime.timezone.utc),
       "minVideoLength": timedelta(2),
       "maxVideoLength": timedelta(3),
     }
@@ -256,20 +315,12 @@ class test_YAMLBuilder(unittest.TestCase):
     
     with tempfile.TemporaryDirectory() as tmpDir:
       tempFileLoc = os.path.join(tmpDir, "temp_config.yaml")
-      
-      # dump the channel
-      with open(tempFileLoc, 'w') as f:
-        yaml.SafeDumper.add_representer(timedelta, YAMLBuilder.Timedelta.representer)
-        yaml.SafeDumper.add_representer(Channel, YAMLBuilder.Channel.representer)
-        yaml.safe_dump(channel, f)
 
-      # load the channel
-      with open(tempFileLoc, 'r') as f:
-        yaml.SafeLoader.add_constructor(YAMLBuilder.Timedelta.YAML_TAG, YAMLBuilder.Timedelta.constructor)
-        yaml.SafeLoader.add_constructor(YAMLBuilder.Channel.YAML_TAG, YAMLBuilder.Channel.constructor)
-        loadedChannel = yaml.safe_load(f)
-      
-      
+      # dump then load the channel using local (non-global) YAML subclasses
+      dumpWithLocalYAML(channel, tempFileLoc)
+      loadedChannel = loadWithLocalYAML(tempFileLoc)
+
+
       # TEST: loaded channel is the same as the original
       self.assertEqual(channel, loadedChannel)
       for argName in arguments.keys():
@@ -287,8 +338,8 @@ class test_YAMLBuilder(unittest.TestCase):
       "downloadDirectory":    str(os.path.dirname(os.path.realpath(__file__))),
       "ffmpegLocation":       str(os.path.realpath(__file__)),
       "channelList":          [],
-      "globalMinVideoDate":   str(datetime.datetime.utcfromtimestamp(0)),
-      "globalMaxVideoDate":   str(datetime.datetime.utcfromtimestamp(1)),
+      "globalMinVideoDate":   datetime.datetime.fromtimestamp(0, datetime.timezone.utc),
+      "globalMaxVideoDate":   datetime.datetime.fromtimestamp(1, datetime.timezone.utc),
       "seenChannelVideos":    {"a":"b"},
       "globalIncludeFilter":  "something",
       "globalExcludeFilter":  "other",
@@ -310,21 +361,12 @@ class test_YAMLBuilder(unittest.TestCase):
   
     with tempfile.TemporaryDirectory() as tmpDir:
       tempFileLoc = os.path.join(tmpDir, "temp_config.yaml")
-    
-      # dump the manager
-      with open(tempFileLoc, 'w') as f:
-        yaml.SafeDumper.add_representer(timedelta, YAMLBuilder.Timedelta.representer)
-        yaml.SafeDumper.add_representer(Channel, YAMLBuilder.Channel.representer)
-        yaml.SafeDumper.add_representer(Manager, YAMLBuilder.Manager.representer)
-        yaml.safe_dump(manager, f)
-    
-      # load the manager
-      with open(tempFileLoc, 'r') as f:
-        yaml.SafeLoader.add_constructor(YAMLBuilder.Timedelta.YAML_TAG, YAMLBuilder.Timedelta.constructor)
-        yaml.SafeLoader.add_constructor(YAMLBuilder.Channel.YAML_TAG, YAMLBuilder.Channel.constructor)
-        yaml.SafeLoader.add_constructor(YAMLBuilder.Manager.YAML_TAG, YAMLBuilder.Manager.constructor)
-        loadedManager = yaml.safe_load(f)
-    
+
+      # dump then load via the real production API (exercises the local-loader
+      # path that loadManager/dumpManager actually use)
+      YAMLBuilder.dumpManager(manager, tempFileLoc)
+      loadedManager = YAMLBuilder.loadManager(tempFileLoc)
+
       # TEST: loaded manager is the same as the original
       for argName in arguments.keys():
         self.assertEqual(str(getattr(manager, argName)), str(getattr(loadedManager, argName)))
@@ -342,17 +384,11 @@ class test_YAMLBuilder(unittest.TestCase):
 
       with tempfile.TemporaryDirectory() as tmpDir:
         tempFileLoc = os.path.join(tmpDir, "temp_config.yaml")
-    
-        # dump the timedelta
-        with open(tempFileLoc, 'w') as f:
-          yaml.SafeDumper.add_representer(timedelta, YAMLBuilder.Timedelta.representer)
-          yaml.safe_dump(td, f)
-    
-        # load the timedelta
-        with open(tempFileLoc, 'r') as f:
-          yaml.SafeLoader.add_constructor(YAMLBuilder.Timedelta.YAML_TAG, YAMLBuilder.Timedelta.constructor)
-          loadedTimedelta = yaml.safe_load(f)
-    
+
+        # dump then load the timedelta using local (non-global) YAML subclasses
+        dumpWithLocalYAML(td, tempFileLoc)
+        loadedTimedelta = loadWithLocalYAML(tempFileLoc)
+
         # TEST: loaded timedelta is the same as the original
         self.assertEqual(td, loadedTimedelta)
 

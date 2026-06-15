@@ -59,12 +59,12 @@ class test_Items(unittest.TestCase):
     arguments = {
       "title":          "string val",
       "id":             "string val",
-      "publishedAt":    str(datetime.datetime.utcfromtimestamp(0)),
+      "publishedAt":    datetime.datetime.fromtimestamp(0, datetime.timezone.utc),
       "ignore":         False,
       "excludeFilter":  "string val",
       "includeFilter":  "string val",
-      "minVideoDate":   str(datetime.datetime.utcfromtimestamp(0)),
-      "maxVideoDate":   str(datetime.datetime.utcfromtimestamp(1)),
+      "minVideoDate":   datetime.datetime.fromtimestamp(0, datetime.timezone.utc),
+      "maxVideoDate":   datetime.datetime.fromtimestamp(1, datetime.timezone.utc),
       "minVideoLength": timedelta(0),
       "maxVideoLength": timedelta(0),
     }
@@ -94,12 +94,12 @@ class test_Items(unittest.TestCase):
       localArguments = {
         "title":          str((i + 1) * 10),
         "id":             str((i + 1) * 100),
-        "publishedAt":    str(datetime.datetime.utcfromtimestamp(i+1)),
+        "publishedAt":    datetime.datetime.fromtimestamp(i+1, datetime.timezone.utc),
         "ignore":         False,
         "excludeFilter":  str((i + 1) * 1000),
         "includeFilter":  str((i + 1) * 10000),
-        "minVideoDate":   str(datetime.datetime.utcfromtimestamp((i+1)*10)),
-        "maxVideoDate":   str(datetime.datetime.utcfromtimestamp((i+1)*100)),
+        "minVideoDate":   datetime.datetime.fromtimestamp((i+1)*10, datetime.timezone.utc),
+        "maxVideoDate":   datetime.datetime.fromtimestamp((i+1)*100, datetime.timezone.utc),
         "minVideoLength": timedelta(seconds=(i+1)*10),
         "maxVideoLength": timedelta(seconds=(i+1)*100),
       }
@@ -163,13 +163,13 @@ class test_Items(unittest.TestCase):
       "title":        "string val",
       "id":           "string val",
       "thumbnailURL": "string val",
-      "publishedAt":  str(datetime.datetime.utcfromtimestamp(0))
+      "publishedAt":  datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
     }
 
     # TEST: acceptable arguments are accepted and assigned correctly
     for argName, argVal in arguments.items():
       vid = Video(**{argName:argVal})
-      self.assertEqual(str(getattr(vid, argName)), argVal)
+      self.assertEqual(str(getattr(vid, argName)), str(argVal))
     
     # TEST: our test has assigned all arguments
     video = Video(**arguments)
@@ -191,7 +191,7 @@ class test_Items(unittest.TestCase):
       title        = str((i+1)*10)
       videoID      = str((i+1)*100)
       thumbnailURL = str((i+1)*1000)
-      publishedAt  = str(datetime.datetime.utcfromtimestamp(i+1))
+      publishedAt  = datetime.datetime.fromtimestamp(i+1, datetime.timezone.utc)
       self.assertNotEqual(title, videoID)
       self.assertNotEqual(videoID, thumbnailURL)
       self.assertNotEqual(thumbnailURL, publishedAt)
