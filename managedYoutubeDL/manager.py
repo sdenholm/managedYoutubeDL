@@ -594,6 +594,10 @@ class Manager:
     
     
     # for each channel's videos:
+    # pad the index and channel-name columns to fixed widths so the video
+    # titles line up vertically (channel.title is the *visible* text, the
+    # _BOLD/_RESET codes around it take no visual space)
+    channelWidth = max((len(channel.title) for channel, _ in channelVideos), default=0)
     n = 0
     logger.info("")
     logger.info("Downloading:")
@@ -601,7 +605,8 @@ class Manager:
 
       for video in videoList:
         n += 1
-        logger.info("  [{}/{}] {}{}{}: {}".format(n, numVideos, _BOLD, channel.title, _RESET, video.title))
+        logger.info("  [{}/{}] {}{}{}: {}".format(
+          str(n).rjust(width), numVideos, _BOLD, channel.title.ljust(channelWidth), _RESET, video.title))
 
         while True:
           try:
