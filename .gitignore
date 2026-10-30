@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 auth.json
 config.yaml
+
+# our log and temp files
+*.log.[0-9]*
+delme*
