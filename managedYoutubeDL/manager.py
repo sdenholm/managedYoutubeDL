@@ -562,7 +562,7 @@ class Manager:
       logger.debug("downloadNewVideos: Checking channel {}".format(channel.title))
       
       # get the recent channel videos
-      videoList = self.ytFetcher.fetchRecentVideos(channel.id)
+      videoList = self.ytFetcher.fetchRecentVideos(channel.id, channelTitle=channel.title)
       logger.debug("downloadNewVideos: Found {} recent videos".format(len(videoList)))
       
       # apply global and per-channel filters

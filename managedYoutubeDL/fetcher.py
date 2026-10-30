@@ -103,7 +103,7 @@ class Fetcher:
       return None
     
     # use a regular expression to separate out any hour, minute and second components
-    pat = re.compile("^PT(\d{1,2}H)?(\d{1,2}M)?(\d{1,2}S)?", re.MULTILINE | re.IGNORECASE)
+    pat = re.compile(r"^PT(\d{1,2}H)?(\d{1,2}M)?(\d{1,2}S)?", re.MULTILINE | re.IGNORECASE)
     results = pat.findall(durationStr)
     if len(results) == 1 and results[0] != ("", "", ""):
       
@@ -343,12 +343,13 @@ class Fetcher:
 
   
   
-  def fetchRecentVideos(self, channelID, maxResults=10):
+  def fetchRecentVideos(self, channelID, maxResults=10, channelTitle=None):
     """
     # Return a list of recent videos belonging to this channel
     #
     :param channelID:
     :param maxResults:
+    :param channelTitle: optional human-readable name, used only for log messages
     :return:
     """
     
@@ -381,9 +382,21 @@ class Fetcher:
       playlistId = playlistID,
       maxResults = maxResults
     )
-    
+
+    # some channels report an uploads playlist that YouTube's API then
+    # refuses to serve (e.g. terminated/empty channels) - skip rather
+    # than aborting the whole run
+    try:
+      response = request.execute()
+    except googleapiclient.errors.HttpError as e:
+      if e.resp.status == 404:
+        channelDesc = "{} ({})".format(channelTitle, channelID) if channelTitle else channelID
+        logger.warning("fetchRecentVideos: uploads playlist {} not found for channel {}, skipping".format(playlistID, channelDesc))
+        return []
+      raise
+
     # parse and return the data
-    parsedResults = Fetcher._parsePlaylistVideos(request.execute())
+    parsedResults = Fetcher._parsePlaylistVideos(response)
     logger.debug("fetchRecentVideos: got {} results".format(len(parsedResults)))
     return parsedResults
 
