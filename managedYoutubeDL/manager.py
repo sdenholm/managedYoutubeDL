@@ -303,26 +303,6 @@ class Manager:
     :return:
     """
     
-    """
-    from subprocess import Popen, PIPE
-    from threading import Timer
-    
-    def run(cmd, timeout_sec):
-        proc = Popen(cmd.split(), stdout=PIPE, stderr=PIPE)
-        timer = Timer(timeout_sec, proc.kill)
-        try:
-            timer.start()
-            stdout, stderr = proc.communicate()
-        finally:
-            timer.cancel()
-    
-    run("sleep 1", 5)
-    run("sleep 5", 1)
-    """
-    
-    # throw timeout error
-    #  -have timeout argument=None
-    
     if quality is None:
       quality = Manager.VideoQuality.QUALITY_MAX
     
@@ -377,7 +357,7 @@ class Manager:
       args   = (returnQueue, options, [self.ytFetcher.assembleVideoURL(video.id)])
     )
     proc.start()
-    proc.join(timeout=timeout.total_seconds())
+    proc.join(timeout=None if timeout is None else timeout.total_seconds())
     
     if proc.is_alive():
       proc.terminate()
@@ -387,18 +367,13 @@ class Manager:
       return returnQueue.get(timeout=5)
     except Exception:
       return False
-    
-    # download the video and return whether we were successful
-    #return Manager._callYoutubeDL(options, [self.ytFetcher.assembleVideoURL(video.id)])
-    
-    #with youtube_dl.YoutubeDL(options) as ydl:
-    #  returnCode = ydl.download([self.ytFetcher.assembleVideoURL(video.id)])
-    #return returnCode == 0
   
   
   @staticmethod
   def _getVideoInfo(options: dict, urlList: list) -> list:
     """
+    # NOTE: not used yet, but keeping for now
+    # 
     # For each video in <urlList> return a dictionary of video info
     #
     :param options:

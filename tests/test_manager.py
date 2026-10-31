@@ -172,7 +172,7 @@ class test_Manager(unittest.TestCase):
     # TEST: no channels → (0, 0)
     ###########################################################################
     manager = test_Manager.createManager(channelList=[])
-    manager.ytFetcher = type("F", (), {"fetchRecentVideos": lambda self, cid: []})()
+    manager.ytFetcher = type("F", (), {"fetchRecentVideos": lambda self, cid, **kwargs: []})()
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
       downloaded, failed = manager.downloadNewVideos(quality=QUALITY)
     self.assertEqual((downloaded, failed), (0, 0))
@@ -183,7 +183,7 @@ class test_Manager(unittest.TestCase):
     fetchCalls = []
     manager = test_Manager.createManager(channelList=[makeChannel(0, ignore=True)])
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: fetchCalls.append(cid) or [makeVideo(0)]
+      "fetchRecentVideos": lambda self, cid, **kwargs: fetchCalls.append(cid) or [makeVideo(0)]
     })()
     manager._downloadVideo = lambda ch, v, quality, timeout: True
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
@@ -199,7 +199,7 @@ class test_Manager(unittest.TestCase):
     vid1 = makeVideo(1)
     manager = test_Manager.createManager(channelList=[ch])
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid0, vid1]
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid0, vid1]
     })()
     manager._downloadVideo = lambda channel, video, quality, timeout: True
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
@@ -216,7 +216,7 @@ class test_Manager(unittest.TestCase):
     vid = makeVideo(0)
     manager = test_Manager.createManager(channelList=[ch])
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid]
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid]
     })()
     manager._downloadVideo = lambda channel, video, quality, timeout: False
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
@@ -236,7 +236,7 @@ class test_Manager(unittest.TestCase):
       r = results[idx[0] % 2]; idx[0] += 1; return r
     manager = test_Manager.createManager(channelList=[ch])
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid0, vid1]
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid0, vid1]
     })()
     manager._downloadVideo = alternating
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
@@ -252,7 +252,7 @@ class test_Manager(unittest.TestCase):
     ch.setMinVideoDate(vid1.publishedAt)   # already at Jan 2
     manager = test_Manager.createManager(channelList=[ch])
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid0]  # only Jan 1 video returned
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid0]  # only Jan 1 video returned
     })()
     manager._downloadVideo = lambda channel, video, quality, timeout: True
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
@@ -291,7 +291,7 @@ class test_Manager(unittest.TestCase):
 
     # RUN 1: vid0 and vid1 are available, both should download
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid0, vid1]
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid0, vid1]
     })()
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
       downloaded, failed = manager.downloadNewVideos(quality=QUALITY)
@@ -301,7 +301,7 @@ class test_Manager(unittest.TestCase):
     # RUN 2: the same two videos are still returned, plus a new vid2
     downloadCalls.clear()
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid0, vid1, vid2]
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid0, vid1, vid2]
     })()
     with unittest.mock.patch("managedYoutubeDL.manager.time.sleep"):
       downloaded, failed = manager.downloadNewVideos(quality=QUALITY)
@@ -328,7 +328,7 @@ class test_Manager(unittest.TestCase):
 
     manager = test_Manager.createManager(channelList=[ch])
     manager.ytFetcher = type("F", (), {
-      "fetchRecentVideos": lambda self, cid: [vid]
+      "fetchRecentVideos": lambda self, cid, **kwargs: [vid]
     })()
 
     # first attempt times out, second attempt succeeds

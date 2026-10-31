@@ -372,7 +372,7 @@ class Fetcher:
     playlistID = items[0].get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads", None)
     if playlistID is None:
       logger.error("fetchRecentVideos: unknown format for channel {}:\n{}".format(channelID, channelResp))
-      return None
+      return []
     
     # get the recent videos playlist
     logger.debug("fetchRecentVideos: getting recent videos")

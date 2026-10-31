@@ -241,7 +241,7 @@ class test_Fetcher(unittest.TestCase):
     ]
     for response in invalidResponses:
       FakeAPI.channelsResponse = response
-      self.assertIsNone(fetcher.fetchRecentVideos(channelID))
+      self.assertListEqual(fetcher.fetchRecentVideos(channelID), [])
       
       
     # undo our fakery
